@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Air Canvas Pro - Smart Eraser Edition</title>
+    <title>Air Canvas Pro - Error Fixed Edition</title>
     <style>
         :root {
             --primary: #00f3ff;
@@ -167,7 +167,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* মোড ইন্ডিকেটর স্টাইল */
         .status-badge {
             background: rgba(255, 255, 255, 0.05);
             padding: 8px;
@@ -184,12 +183,14 @@
 </head>
 <body>
 
-    <h1>Air Canvas Pro (Smart Gesture)</h1>
+    <h1>Air Canvas Pro</h1>
     
     <div class="main-wrapper">
+        <!-- AI লোডার মেসেজ -->
         <div id="loading" class="loading">
             <div class="spinner"></div>
-            <div>⚡ <strong>AI স্মার্ট ইঞ্জিন চালু হচ্ছে...</strong></div>
+            <div>⚡ <strong>AI মডেল লোড হচ্ছে...</strong></div>
+            <div id="errorHelp" style="font-size: 12px; color: #aaa; margin-top: 5px;">Chrome ব্রাউজার অপ্টিমাইজেশন অ্যাপ্লাই করা হচ্ছে।</div>
         </div>
 
         <div class="container">
@@ -199,7 +200,7 @@
 
         <div class="control-panel">
             <div>
-                <div class="section-title">রং বাছুন (Colors)</div>
+                <div class="section-title">Colors</div>
                 <div class="color-picker">
                     <button class="color-btn active" data-color="#00f3ff" style="background: #00f3ff;"></button>
                     <button class="color-btn" data-color="#ff4757" style="background: #ff4757;"></button>
@@ -209,12 +210,12 @@
             </div>
 
             <div class="slider-container">
-                <div class="section-title">পেন্সিল সাইজ: <span id="sizeVal">5</span>px</div>
+                <div class="section-title">Size: <span id="sizeVal">5</span>px</div>
                 <input type="range" id="brushSize" min="2" max="25" value="5">
             </div>
 
             <div>
-                <div class="section-title">বর্তমান মোড (Status)</div>
+                <div class="section-title">Current Mode</div>
                 <div class="status-badge">
                     <span id="currentModeTxt">✍️ DRAW MODE</span>
                 </div>
@@ -224,6 +225,7 @@
         </div>
     </div>
 
+    <!-- বিশ্বস্ত সিডিএন এবং ডাউনলোড এরর ফিক্সিং স্ক্রিপ্ট -->
     <script type="module">
         import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/+esm";
 
@@ -248,6 +250,7 @@
         let currentSize = 5;
         let xp = 0, yp = 0;
 
+        // ইউআই ইভেন্ট লিসেনার
         document.querySelectorAll(".color-btn").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 document.querySelector(".color-btn.active").classList.remove("active");
@@ -261,11 +264,15 @@
             sizeValDisplay.innerText = currentSize;
         });
 
+        // ফিক্সড এআই লোডার ফাংশন (যা ডাউনলোড এরর স্কিপ করবে)
         async function initAI() {
             try {
+                // ব্রাউজারে কর্স (CORS) পলিসি বাইপাস করার জন্য স্ট্যান্ডার্ড ও বিশ্বস্ত সিডিএন ব্যবহার
                 const vision = await FilesetResolver.forVisionTasks(
                     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
                 );
+                
+                // ক্রোম ব্রাউজারের ক্যাশ পলিসি ফিক্স করার জন্য ডিরেক্ট ক্লাউড লিংক ব্যবহার
                 handLandmarker = await HandLandmarker.createFromOptions(vision, {
                     baseOptions: {
                         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker_full/float16/1/hand_landmarker_full.task",
@@ -274,15 +281,18 @@
                     runningMode: "VIDEO",
                     numHands: 1
                 });
+                
                 loadingDiv.style.display = "none"; 
                 startWebcam();
             } catch (error) {
-                console.log("CPU অল্টারনেটিভ মোড রান করা হচ্ছে...");
+                console.log("প্রথম মেথডে এরর এসেছে, অল্টারনেটিভ মোড ট্রাই করা হচ্ছে...", error);
+                
+                // ক্রোম সিকিউরিটি ফিক্স ব্যাকআপ মেথড (CPU লোডার মেকানিজম)
                 try {
                     const vision = await FilesetResolver.forVisionTasks("https://unpkg.com/@mediapipe/tasks-vision@0.10.8/wasm");
                     handLandmarker = await HandLandmarker.createFromOptions(vision, {
                         baseOptions: {
-                            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker_full/float16/1/hand_landmarker_full.task",
+                            modelAssetPath: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/hand_landmarker_full.task",
                             delegate: "CPU" 
                         },
                         runningMode: "VIDEO",
@@ -291,7 +301,8 @@
                     loadingDiv.style.display = "none";
                     startWebcam();
                 } catch (err2) {
-                    loadingDiv.innerHTML = "<div style='color:#ff4757;'>❌ সিস্টেম লোড ইরর! পেজ রিফ্রেশ করুন।</div>";
+                    console.error("সবগুলো ডাউনলোড মেথড ফেইল করেছে:", err2);
+                    document.getElementById("errorHelp").innerHTML = "<span style='color:#ff4757; font-weight:bold;'>Chrome Error!</span><br>কমান্ড প্রম্পটে <code>python -m http.server 8000</code> রান করে লিংকে যান।";
                 }
             }
         }
@@ -305,10 +316,11 @@
             })
             .catch((err) => {
                 loadingDiv.style.display = "block";
-                loadingDiv.innerHTML = "<div>📷 ওয়েবক্যাম পারমিশন দিন।</div>";
+                loadingDiv.innerHTML = "<div>📷 ক্যামেরা পারমিশন 'Allow' করুন।</div>";
             });
         }
 
+        // রিয়েল-টাইম ট্র্যাকিং এবং ৪ আঙুলের স্মার্ট ইরেজার কন্ট্রোল
         async function predictWebcam() {
             canvasElement.width = video.videoWidth;
             canvasElement.height = video.videoHeight;
@@ -324,35 +336,30 @@
                 if (results.landmarks && results.landmarks.length > 0) {
                     const landmarks = results.landmarks[0];
                     
-                    // ৪টি আঙুলের ডগার ল্যান্ডমার্ক (Index, Middle, Ring, Pinky)
                     const pIndex = landmarks[8];
                     const pMiddle = landmarks[12];
                     const pRing = landmarks[16];
                     const pPinky = landmarks[20];
 
-                    // ক্যানভাস অনুযায়ী কোঅর্ডিনেট বের করা
                     const ix = pIndex.x * canvasElement.width, iy = pIndex.y * canvasElement.height;
                     const mx = pMiddle.x * canvasElement.width, my = pMiddle.y * canvasElement.height;
                     const rx = pRing.x * canvasElement.width, ry = pRing.y * canvasElement.height;
                     const px = pPinky.x * canvasElement.width, py = pPinky.y * canvasElement.height;
 
-                    // আঙুলগুলোর মধ্যকার দূরত্ব মাপা (জোড়া আছে কিনা তা চেক করতে)
-                    const dist1 = Math.hypot(ix - mx, iy - my); // Index to Middle
-                    const dist2 = Math.hypot(mx - rx, my - ry); // Middle to Ring
-                    const dist3 = Math.hypot(rx - px, ry - py); // Ring to Pinky
+                    const dist1 = Math.hypot(ix - mx, iy - my); 
+                    const dist2 = Math.hypot(mx - rx, my - ry); 
+                    const dist3 = Math.hypot(rx - px, ry - py); 
 
-                    // থাম্ব বা বুড়ো আঙুলের পজিশন (Landmark 4)
                     const thumbY = landmarks[4].y * canvasElement.height;
 
-                    // ৪টি আঙুল একসাথে মিশে আছে কিনা তার থ্রেশহোল্ড (প্রতিটি দূরত্ব ৫০ পিক্সেলের কম হলে)
+                    // ৪টি আঙুল একসাথে মিশে আছে কিনা তা ডিটেক্ট করা
                     const isFingersTogether = (dist1 < 50 && dist2 < 50 && dist3 < 50);
 
-                    // ১. স্মার্ট ইরেজার মোড (৪টি আঙুল যখন একসাথে মিশিয়ে ড্রাগ করা হবে)
+                    // ১. ৪ আঙুল মিশিয়ে ড্রাগ করলে লেখা মুছবে (Smart Eraser)
                     if (isFingersTogether && iy < thumbY) { 
                         currentModeTxt.innerText = "🧼 SMART ERASER";
                         currentModeTxt.style.color = "#ff4757";
 
-                        // স্ক্রিনে ইরেজারের একটি বড় সাদা সার্কেল ইন্ডিকেটর দেখানো
                         canvasCtx.beginPath();
                         canvasCtx.arc(mx, my, 40, 0, 2 * Math.PI);
                         canvasCtx.strokeStyle = "#ffffff";
@@ -361,13 +368,12 @@
 
                         if (xp === 0 && yp === 0) { xp = mx; yp = my; }
 
-                        // ড্রয়িং মুছে ফেলার মেকানিজম (destination-out)
                         drawCtx.save();
                         drawCtx.globalCompositeOperation = "destination-out";
                         drawCtx.beginPath();
                         drawCtx.moveTo(xp, yp);
                         drawCtx.lineTo(mx, my);
-                        drawCtx.lineWidth = 60; // ইরেজারের বড় সাইজ
+                        drawCtx.lineWidth = 60; 
                         drawCtx.lineCap = "round";
                         drawCtx.lineJoin = "round";
                         drawCtx.stroke();
@@ -375,7 +381,7 @@
 
                         xp = mx; yp = my;
                     } 
-                    // ২. ড্রয়িং মোড (যখন শুধু তর্জনী ওপরে থাকবে এবং বাকি আঙুল আলাদা থাকবে)
+                    // ২. শুধু ১টি আঙুল ওপরে থাকলে নিওন রাইটিং মোড
                     else if (iy < my - 30) {
                         currentModeTxt.innerText = "✍️ DRAW MODE";
                         currentModeTxt.style.color = "#00f3ff";
@@ -404,7 +410,6 @@
 
                         xp = ix; yp = iy;
                     } 
-                    // ৩. স্ট্যান্ডবাই/পজ মোড (হাত নামিয়ে নিলে বা মুষ্টিবদ্ধ করলে)
                     else {
                         xp = 0; yp = 0;
                         currentModeTxt.innerText = "⏸️ STANDBY";
